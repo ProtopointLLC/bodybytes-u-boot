@@ -1,0 +1,6 @@
+BODYBYTES BOARD
+S:	Maintained
+F:	board/bodybytes/bodybytes
+F:	include/configs/bodybytes.h
+F:	configs/bodybytes_defconfig
+F:	arch/mips/dts/bodybytes,bodybytes.dts
