@@ -85,7 +85,6 @@
 	pinctrl-0 = <&sd_iot_mode &mdi_p1_gpio>;
 	bus-width = <4>;
 	cap-mmc-highspeed;
-	/delete-property/ cap-sd-highspeed;
 	non-removable;
 	mmc-pwrseq = <&emmc_pwrseq>;
 	status = "okay";

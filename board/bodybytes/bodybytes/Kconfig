@@ -1,0 +1,12 @@
+if BOARD_BODYBYTES
+
+config SYS_BOARD
+	default "bodybytes"
+
+config SYS_VENDOR
+	default "bodybytes"
+
+config SYS_CONFIG_NAME
+	default "bodybytes"
+
+endif
