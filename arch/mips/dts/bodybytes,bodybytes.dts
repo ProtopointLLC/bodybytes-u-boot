@@ -90,7 +90,7 @@
 
 &mmc {
 	/*
-	 * sd_iot_mode: EPHY_APGIO_AIO_EN[4:1]=0xf (MDI pads → digital) +
+	 * sd_iot_mode: EPHY_GPIO_AIO_EN[4:1]=0xf (MDI pads → digital) +
 	 * SD_MODE=0 (SDXC on EPHY P3/P4 pads) + ESD=0 (IoT routing).
 	 * mdi_p1_gpio: SPIS_MODE=gpio so MDI_TN_P1 (GPIO#15) is the eMMC reset.
 	 */
