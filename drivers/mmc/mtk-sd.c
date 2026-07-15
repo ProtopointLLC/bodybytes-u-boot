@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <malloc.h>
 #include <mapmem.h>
+#include <pwrseq.h>
 #include <stdbool.h>
 #include <asm/gpio.h>
 #include <asm/types.h>
@@ -1773,6 +1774,15 @@ static int msdc_drv_probe(struct udevice *dev)
 #endif
 
 	msdc_ungate_clock(host);
+
+#if CONFIG_IS_ENABLED(MMC_PWRSEQ)
+	{
+		int pwrseq_ret = mmc_pwrseq_get_power(dev, cfg);
+		if (!pwrseq_ret)
+			pwrseq_set_power(cfg->pwr_dev, true);
+	}
+#endif
+
 	msdc_init_hw(host);
 
 	upriv->mmc = &plat->mmc;
@@ -1886,7 +1896,6 @@ static const struct msdc_compatible mt7620_compat = {
 	.enhance_rx = false,
 	.builtin_pad_ctrl = true,
 	.default_pad_dly = true,
-	.use_internal_cd = true,
 };
 
 static const struct msdc_compatible mt7621_compat = {

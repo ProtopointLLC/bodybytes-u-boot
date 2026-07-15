@@ -7,6 +7,11 @@
 	compatible = "bodybytes,bodybytes", "mediatek,mt7628an-soc";
 	model = "Bodybytes";
 
+	memory@0 {
+		device_type = "memory";
+		reg = <0x00000000 0x04000000>;
+	};
+
 	aliases {
 		serial2 = &uart2;
 		spi0 = &spi0;
@@ -14,26 +19,6 @@
 
 	chosen {
 		stdout-path = &uart2;
-	};
-
-	emmc_pwrseq: emmc_pwrseq {
-		compatible = "mmc-pwrseq-emmc";
-		/* MDI_TN_P1, SoC pin 42, gpio0 offset 15, active-low */
-		reset-gpios = <&gpio0 15 GPIO_ACTIVE_LOW>;
-	};
-};
-
-&pinctrl {
-	/*
-	 * SPIS_MODE=gpio — switches MDI P1 pads to GPIO function.
-	 * Required so MDI_TN_P1 (GPIO#15) is driveable as the eMMC reset output
-	 * and MDI_TP_P1 (GPIO#14) is readable as the recovery-boot sensor.
-	 */
-	mdi_p1_gpio: mdi_p1_gpio {
-		spis_gpio {
-			groups = "spis";
-			function = "gpio";
-		};
 	};
 };
 
@@ -89,16 +74,12 @@
 };
 
 &mmc {
-	/*
-	 * sd_iot_mode: EPHY_GPIO_AIO_EN[4:1]=0xf (MDI pads → digital) +
-	 * SD_MODE=0 (SDXC on EPHY P3/P4 pads) + ESD=0 (IoT routing).
-	 * mdi_p1_gpio: SPIS_MODE=gpio so MDI_TN_P1 (GPIO#15) is the eMMC reset.
-	 */
-	pinctrl-names = "default";
-	pinctrl-0 = <&sd_iot_mode &mdi_p1_gpio>;
-	bus-width = <4>;
-	cap-mmc-highspeed;
-	non-removable;
-	mmc-pwrseq = <&emmc_pwrseq>;
 	status = "okay";
+	bus-width = <4>;
+	max-frequency = <1000000>;
+	builtin-cd = <0>;
+
+	pinctrl-names = "default";
+	pinctrl-0 = <&sd_iot_mode>;
 };
+
