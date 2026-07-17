@@ -5,7 +5,7 @@
 
 #include <configs/mt7628.h>
 
-/* UART2 (console) MMIO base — palmbus base 0xb0000000 + offset 0xe00 */
+/* UART2 (console) MMIO base - palmbus base 0xb0000000 + offset 0xe00 */
 #if defined(CONFIG_XPL_BUILD) && defined(CONFIG_SPL_SERIAL)
 #define CFG_SYS_NS16550_COM3		0xb0000e00
 #endif
