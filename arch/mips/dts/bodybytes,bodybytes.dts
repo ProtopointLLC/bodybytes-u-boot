@@ -22,6 +22,15 @@
 	};
 };
 
+&pinctrl {
+	pinctrl-0 = <&state_default &mdi_p1_gpio>;
+
+	mdi_p1_gpio: mdi_p1_gpio {
+		groups = "spis";
+		function = "gpio";
+	};
+};
+
 &uart0 {
 	status = "disabled";
 };
