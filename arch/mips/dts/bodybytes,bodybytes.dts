@@ -23,7 +23,11 @@
 };
 
 &pinctrl {
-	pinctrl-0 = <&state_default &mdi_p1_gpio>;
+	/*
+	 *  mdi_p1_gpio:   MDI P1 pads → GPIO (hall sensor + eMMC RST_n)
+	 *  ephy_iot_mode: all four EPHY groups → digital (required for MSDC CLK/CMD path)
+	 */
+	pinctrl-0 = <&state_default &mdi_p1_gpio &ephy_iot_mode>;
 
 	mdi_p1_gpio: mdi_p1_gpio {
 		groups = "spis";
@@ -35,15 +39,20 @@
 	status = "disabled";
 };
 
+&uart1 {
+	status = "disabled";
+};
+
+&eth {
+	status = "disabled";
+};
+
+&usb_phy {
+	status = "disabled";
+};
+
 &uart2 {
 	status = "okay";
-	/*
-	 * ephy_iot_mode sets AGPIO_CFG[20:17]=0xf (MDI pads → digital).
-	 * Without it the pads stay analog after reset and JTAG-loaded u-boot.bin
-	 * produces no output. uart2_pins routes UART2 to those pads (UART2_MODE=0).
-	 */
-	pinctrl-names = "default";
-	pinctrl-0 = <&uart2_pins &ephy_iot_mode>;
 };
 
 &spi0 {
@@ -86,13 +95,25 @@
 	};
 };
 
+/ {
+	emmc_pwrseq: emmc-pwrseq {
+		compatible = "mmc-pwrseq-emmc";
+		reset-gpios = <&gpio0 15 GPIO_ACTIVE_LOW>;
+	};
+};
+
 &mmc {
 	status = "okay";
-	bus-width = <4>;
-	max-frequency = <1000000>;
-	builtin-cd = <0>;
 
 	pinctrl-names = "default";
 	pinctrl-0 = <&sd_iot_mode>;
-};
 
+	max-frequency = <1000000>;
+	/* max-frequency = <48000000>; cap-sd-highspeed; cap-mmc-highspeed; */
+
+	bus-width = <4>;
+	no-1-8-v;
+	non-removable;
+	builtin-cd = <0>;
+	mmc-pwrseq = <&emmc_pwrseq>;
+};
