@@ -311,6 +311,7 @@ struct msdc_compatible {
 	bool default_pad_dly;
 	bool use_internal_cd;
 	bool use_dma_mode;
+	bool mips_mt762x;
 };
 
 struct msdc_delay_phase {
@@ -1029,7 +1030,11 @@ static void msdc_set_mclk(struct udevice *dev,
 	 * mmc_select_hs400() will drop to 50Mhz and High speed mode,
 	 * tune result of hs200/200Mhz is not suitable for 50Mhz
 	 */
-	if (host->sclk <= 52000000) {
+	if (host->dev_comp->mips_mt762x && host->sclk > 25000000) {
+		/* Rising-edge sampling needed above 25 MHz on MT762x */
+		setbits_le32(&host->base->msdc_iocon,
+			     MSDC_IOCON_RSPL | MSDC_IOCON_DSPL | MSDC_IOCON_W_DSPL);
+	} else if (host->sclk <= 52000000) {
 		writel(host->def_tune_para.iocon, &host->base->msdc_iocon);
 		writel(host->def_tune_para.pad_tune,
 		       &host->base->pad_tune);
@@ -1597,8 +1602,22 @@ static void msdc_init_hw(struct msdc_host *host)
 	else
 		clrbits_le32(&host->base->msdc_iocon, MSDC_IOCON_RSPL);
 
-	writel(0x403c0046, &host->base->patch_bit0);
-	writel(0xffff4089, &host->base->patch_bit1);
+	if (!host->dev_comp->mips_mt762x) {
+		/*
+		 * MT7628/MT7620 (mips_mt762x): register layout differs from
+		 * MT8173/MT7622; these values corrupt the MT762x controller
+		 * state. Keep hardware reset defaults instead (mirrors the
+		 * OpenWrt kernel patch 831-03 for drivers/mmc/host/mtk-sd.c).
+		 *
+		 * PATCH_BIT1 reset = 0xFF800009: bits [31:23] are nine active-
+		 * high clock-enable gates, all 1 at reset. Writing 0x00000011
+		 * (vendor SDK value) would clear all nine — leave untouched.
+		 * emmc50_cfg0 at struct offset 0x208 does not exist on MT7628
+		 * (vendor register map ends at 0x104); skip that write too.
+		 */
+		writel(0x403c0046, &host->base->patch_bit0);
+		writel(0xffff4089, &host->base->patch_bit1);
+	}
 
 	if (host->dev_comp->stop_clk_fix) {
 		clrsetbits_le32(&host->base->patch_bit1, MSDC_PB1_STOP_DLY,
@@ -1612,7 +1631,8 @@ static void msdc_init_hw(struct msdc_host *host)
 	if (host->dev_comp->busy_check)
 		clrbits_le32(&host->base->patch_bit1, (1 << 7));
 
-	setbits_le32(&host->base->emmc50_cfg0, EMMC50_CFG_CFCSTS_SEL);
+	if (!host->dev_comp->mips_mt762x)
+		setbits_le32(&host->base->emmc50_cfg0, EMMC50_CFG_CFCSTS_SEL);
 
 	if (host->dev_comp->async_fifo) {
 		clrsetbits_le32(&host->base->patch_bit2, MSDC_PB2_RESPWAIT,
@@ -1666,7 +1686,7 @@ static void msdc_init_hw(struct msdc_host *host)
 		if (host->top_base)
 			setbits_le32(&host->top_base->emmc_top_control,
 				     PAD_RXDLY_SEL);
-		else
+		else if (!host->dev_comp->mips_mt762x)
 			setbits_le32(tune_reg, MSDC_PAD_TUNE_RXDLYSEL);
 	}
 
@@ -1896,6 +1916,7 @@ static const struct msdc_compatible mt7620_compat = {
 	.enhance_rx = false,
 	.builtin_pad_ctrl = true,
 	.default_pad_dly = true,
+	.mips_mt762x = true,
 };
 
 static const struct msdc_compatible mt7621_compat = {
