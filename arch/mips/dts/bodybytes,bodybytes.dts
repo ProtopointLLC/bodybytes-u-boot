@@ -44,7 +44,19 @@
 };
 
 &eth {
-	status = "disabled";
+	/*
+	 * Enabled only for its probe side effect. mt7628_eth_probe() →
+	 * rt305x_esw_init() pulses the EPHY reset and runs mt7628_ephy_init(),
+	 * which includes the "fix EPHY idle state abnormal behavior" MDIO write.
+	 * SD/eMMC runs on the EPHY P1-P4 pads in IoT mode; without this bring-up
+	 * those pads sit in the abnormal idle-low state and SD DAT0 never idles
+	 * high (see docs/uboot-emmc.md). No mediatek,poll-link-phy → phy_connect
+	 * is skipped, so probe completes with no cable. ephy_iot_mode keeps the
+	 * pads digital so this never reverts them to analog (ethernet) mode.
+	 */
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&ephy_iot_mode>;
 };
 
 &usb_phy {
@@ -108,12 +120,30 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&sd_iot_mode>;
 
-	max-frequency = <1000000>;
-	/* max-frequency = <48000000>; cap-sd-highspeed; cap-mmc-highspeed; */
+	/*
+	 * SD High-Speed / MMC High-Speed (50 MHz class), capped at 48 MHz — the
+	 * fastest the MT7628 SDXC does at 3.3 V (HS200/HS400 need 1.8 V). Above
+	 * 25 MHz the driver forces rising-edge response sampling (msdc_set_mclk
+	 * fix). Enumerated fine at 1 MHz legacy; verify at 48 MHz. Requires the
+	 * strap in GPIO/EPHY_LED mode (JTAG off) — JTAG breaks SD-on-EPHY.
+	 */
+	max-frequency = <48000000>;
+	cap-sd-highspeed;
+	cap-mmc-highspeed;
 
 	bus-width = <4>;
 	no-1-8-v;
 	non-removable;
 	builtin-cd = <0>;
 	mmc-pwrseq = <&emmc_pwrseq>;
+
+	/*
+	 * Response-sample edge. Base mt7628a.dtsi sets r_smpl = <1> (RSPL rising);
+	 * the vendor SDK uses the falling edge, so force it here. This only
+	 * affects the low-speed init phase — above 25 MHz the driver forces
+	 * rising-edge sampling regardless. Kept at the empirically-working value.
+	 * (Note: the earlier all-zero-response failure was CPU-JTAG being active,
+	 * not this bit.)
+	 */
+	r_smpl = <0>;
 };
