@@ -121,11 +121,10 @@
 	pinctrl-0 = <&sd_iot_mode>;
 
 	/*
-	 * 26 MHz, not 48: EPHY pads are marginal; 48 MHz gave CMD-phase timeouts
-	 * escalating to "Card stuck busy" + I/O errors. Needs JTAG off (EPHY strap).
+	 * 26 MHz or 48 MHz: EPHY pads are marginal, 48 MHz needs tight wiring. Needs JTAG off (EPHY strap).
 	 * Above 25 MHz the driver forces rising-edge response sampling.
 	 */
-	max-frequency = <26000000>;
+	max-frequency = <48000000>;
 	cap-sd-highspeed;
 	cap-mmc-highspeed;
 
