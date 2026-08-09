@@ -121,13 +121,11 @@
 	pinctrl-0 = <&sd_iot_mode>;
 
 	/*
-	 * SD High-Speed / MMC High-Speed (50 MHz class), capped at 48 MHz — the
-	 * fastest the MT7628 SDXC does at 3.3 V (HS200/HS400 need 1.8 V). Above
-	 * 25 MHz the driver forces rising-edge response sampling (msdc_set_mclk
-	 * fix). Enumerated fine at 1 MHz legacy; verify at 48 MHz. Requires the
-	 * strap in GPIO/EPHY_LED mode (JTAG off) — JTAG breaks SD-on-EPHY.
+	 * 26 MHz, not 48: EPHY pads are marginal; 48 MHz gave CMD-phase timeouts
+	 * escalating to "Card stuck busy" + I/O errors. Needs JTAG off (EPHY strap).
+	 * Above 25 MHz the driver forces rising-edge response sampling.
 	 */
-	max-frequency = <48000000>;
+	max-frequency = <26000000>;
 	cap-sd-highspeed;
 	cap-mmc-highspeed;
 
