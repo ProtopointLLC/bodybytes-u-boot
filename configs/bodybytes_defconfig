@@ -44,7 +44,7 @@ CONFIG_IDENT_STRING=" Bodybytes fork"
 
 CONFIG_CONS_INDEX=3
 CONFIG_SYS_CONSOLE_INFO_QUIET=y
-CONFIG_BOOTDELAY=5
+CONFIG_BOOTDELAY=3
 CONFIG_USE_PREBOOT=y
 CONFIG_PREBOOT="fdt addr ${fdtcontroladdr}"
 CONFIG_HUSH_PARSER=y
@@ -122,10 +122,6 @@ CONFIG_CMD_EXT4=y
 # CONFIG_CMD_XIMG is not set
 # CONFIG_CMD_LOADS is not set
 
-# Ethernet is enabled solely for its probe side effect: mt7628_eth_probe →
-# rt305x_esw_init() brings the EPHY out of its abnormal idle state (reset pulse +
-# mt7628_ephy_init MDIO). SD/eMMC shares the EPHY P3/P4 pads in IoT mode and needs
-# this, otherwise DAT0 is held low. No cable/PHY is used (no mediatek,poll-link-phy).
 CONFIG_NET=y
 CONFIG_MT7628_ETH=y
 CONFIG_NET_RANDOM_ETHADDR=y
